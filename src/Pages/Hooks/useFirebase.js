@@ -5,8 +5,10 @@ import {
   signInWithPopup,
   signOut,
 } from "firebase/auth";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import initializeAuth from "./../../Firebase/Firebase.init";
+import { setError, setLoading, setUser } from "./../userSlice/userSlice";
 
 initializeAuth();
 
@@ -14,22 +16,20 @@ const googleProvider = new GoogleAuthProvider();
 
 const useFirebase = () => {
   const auth = getAuth();
-  const [user, setUser] = useState({});
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   const googleSignIn = () => {
-    setLoading(true);
+    dispatch(setLoading({ loading: true }));
     signInWithPopup(auth, googleProvider)
       .then((result) => {
-        setError("");
+        dispatch(setError({ error: "" }));
       })
       .catch((error) => {
         const errorMessage = error.message;
-        setError(errorMessage);
+        dispatch(setError({ error: errorMessage }));
       })
       .finally(() => {
-        setLoading(false);
+        dispatch(setLoading({ loading: false }));
       });
   };
 
@@ -37,12 +37,12 @@ const useFirebase = () => {
     () =>
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          setUser(user);
+          dispatch(setUser({ user: user }));
           // ...
         } else {
-          setUser({});
+          dispatch(setUser({ user: {} }));
         }
-        setLoading(false);
+        dispatch(setLoading({ loading: false }));
       }),
     [auth]
   );
@@ -50,25 +50,22 @@ const useFirebase = () => {
   // Logout
 
   const logout = () => {
-    setLoading(true);
+    dispatch(setLoading({ loading: true }));
     signOut(auth)
       .then(() => {
-        setUser({});
+        dispatch(setUser({ user: {} }));
       })
       .catch((error) => {
         // An error happened.
       })
       .finally(() => {
-        setLoading(false);
+        dispatch(setLoading({ loading: false }));
       });
   };
 
   return {
     googleSignIn,
     logout,
-    user,
-    error,
-    loading,
   };
 };
 
